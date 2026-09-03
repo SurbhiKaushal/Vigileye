@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# runtime artefacts
+logs/*.csv
+logs/*.db
+calibration.json
+snapshot_*.png
+*.mp4
+
+# models & data (large / licensed)
+models/*.pt
+yolov8n.pt
+data/videos/
+data/features.csv
+
+.DS_Store
+.pytest_cache/
