@@ -25,6 +25,7 @@ from vigileye.fusion import DriverState
 from vigileye.logger import SessionLogger
 from vigileye.pipeline import VigilEyePipeline
 from vigileye.video import VideoStream
+from vigileye.pico_alert import send_to_pico
 from vigileye.visualize import (
     draw_detections,
     draw_hud,
@@ -78,6 +79,7 @@ def main() -> None:
     muted = False
     frames = 0
     t_start = time.time()
+    previous_state = None
 
     if logger:
         print(f"[VigilEye] session {logger.session_id} started")
@@ -91,6 +93,16 @@ def main() -> None:
 
             t0 = time.perf_counter()
             signals, result = pipeline.process(frame, ts)
+            if not pipeline.calibrating:
+                current_state = (
+                    result.state.value
+                    if hasattr(result.state, "value")
+                    else str(result.state)
+                )
+
+                if current_state != previous_state:
+                    send_to_pico(current_state)
+                    previous_state = current_state
             fps_hist.append(1.0 / max(time.perf_counter() - t0, 1e-6))
             fps = sum(fps_hist) / len(fps_hist)
             frames += 1
