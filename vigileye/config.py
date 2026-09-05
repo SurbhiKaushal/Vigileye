@@ -18,7 +18,7 @@ except ImportError:  # pragma: no cover
 
 
 DEFAULTS: Dict[str, Any] = {
-    "camera": {"source": 0, "width": 640, "height": 480, "fps": 30, "flip": True},
+    "camera": {"source": 1, "width": 640, "height": 480, "fps": 30, "flip": True},
     "face_mesh": {
         "max_num_faces": 1,
         "refine_landmarks": True,

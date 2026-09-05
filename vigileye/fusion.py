@@ -102,6 +102,7 @@ class Signals:
 
     phone_conf: float = 0.0
     phone_sustained: bool = False
+    cnn_drowsy_prob: float = 0.0
     hands_detected: int = 0
     hands_on_wheel: int = 0
     hands_off: bool = False
@@ -176,7 +177,12 @@ class RuleFusion:
         # window has filled: one closed frame at t=0 would otherwise read as
         # 100% closure. Ramp its influence in over the first `perclos_warmup_s`.
         coverage = clip01(s.perclos_coverage / self.perclos_warmup_s)
-        c["perclos"] = coverage * clip01(s.perclos / max(self.perclos_critical, 1e-6))
+        c["perclos"] = coverage * clip01(
+            s.perclos / max(self.perclos_critical, 1e-6)
+        )
+
+        c["cnn"] = clip01(s.cnn_drowsy_prob)
+
         c["microsleep"] = 1.0 if s.microsleep_recent else 0.0
         c["yawn"] = clip01(s.yawn_rate / self.yawn_saturation)
         c["nod"] = clip01(s.nod_recent_count / self.nod_saturation)
@@ -186,7 +192,15 @@ class RuleFusion:
         c["head"] = 1.0 if s.head_turned else 0.0
         c["hands"] = 1.0 if s.hands_off else 0.0
 
-        drowsy = sum(self.w_drowsy[k] * c[k] for k in self.w_drowsy)
+        drowsy = sum(
+            self.w_drowsy[k] * c[k]
+            for k in self.w_drowsy
+        )
+
+        # CNN provides an additional learned visual cue.
+        # Keep it as a supporting signal rather than replacing
+        # the interpretable physiological cues.
+        drowsy = 0.80 * drowsy + 0.20 * c["cnn"]
         distract = sum(self.w_distract[k] * c[k] for k in self.w_distract)
 
         # A prolonged eye closure is an emergency regardless of the window

@@ -1,47 +1,21 @@
-# Pico hardware is not connected yet.
-# Set this to True when the Raspberry Pi Pico is actually connected.
+import serial
 
-PICO_ENABLED = False
-
+PICO_PORT = "COM7"   # replace with YOUR actual port number
 _pico = None
-
-PICO_PORT = "COM5"
-PICO_BAUD = 115200
-
 
 def get_pico():
     global _pico
-
-    if not PICO_ENABLED:
-        return None
-
     if _pico is None:
         try:
-            import serial
-
-            _pico = serial.Serial(
-                PICO_PORT,
-                PICO_BAUD,
-                timeout=1
-            )
-
-            print(f"[VigilEye] Pico connected on {PICO_PORT}")
-
+            _pico = serial.Serial(PICO_PORT, 115200, timeout=1)
         except Exception as e:
-            print(f"[VigilEye] Pico not connected: {e}")
-
+            print(f"[VigilEye] Could not open Pico serial port: {e}")
     return _pico
 
-
 def send_to_pico(state: str):
-    if not PICO_ENABLED:
-        return
-
     pico = get_pico()
-
     if pico is None:
         return
-
     try:
         pico.write((state + "\n").encode())
     except Exception as e:

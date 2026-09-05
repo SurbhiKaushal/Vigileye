@@ -23,6 +23,8 @@ from .fusion import DriverState, FusionResult, HybridFusion, RuleFusion, Signals
 from .gaze import GazeEstimator
 from .head_pose import HeadPoseEstimator, HeadTurnDetector, NodDetector
 from .landmarks import FaceMeshDetector
+from .cnn_inference import CNNDrowsinessPredictor
+
 from .metrics import (
     BlinkDetector,
     PerclosTracker,
@@ -39,6 +41,10 @@ class VigilEyePipeline:
         self.face = FaceMeshDetector(cfg.face_mesh)
         self.pose = HeadPoseEstimator()
         self.gaze = GazeEstimator(cfg.gaze)
+                # CNN drowsiness classifier
+        self.cnn = CNNDrowsinessPredictor(
+            "models/drowsiness_model.pth"
+        )
 
         self.perclos = PerclosTracker(cfg.eye.perclos_window_s)
         self.blinks = BlinkDetector(
@@ -125,6 +131,21 @@ class VigilEyePipeline:
 
         pts = face.points
         self.last_points = pts
+                # -- CNN drowsiness ----------------------------------------------
+        # Build a bounding box from the MediaPipe face landmarks.
+        x_coords = pts[:, 0]
+        y_coords = pts[:, 1]
+
+        x_min = max(0, int(np.min(x_coords)) - 30)
+        y_min = max(0, int(np.min(y_coords)) - 30)
+        x_max = min(frame_bgr.shape[1], int(np.max(x_coords)) + 30)
+        y_max = min(frame_bgr.shape[0], int(np.max(y_coords)) + 30)
+
+        face_crop = frame_bgr[y_min:y_max, x_min:x_max]
+
+        if face_crop.size > 0:
+            _, _, cnn_drowsy_prob = self.cnn.predict(face_crop)
+            s.cnn_drowsy_prob = cnn_drowsy_prob
 
         # -- eyes ---------------------------------------------------------
         ear, _, _ = both_eyes_ear(pts)

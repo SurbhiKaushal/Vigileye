@@ -6,7 +6,7 @@
 # =====================================================================
 
 camera:
-  source: 0             # 0 = default webcam, or a path to a video file
+  source: 1             # 0 = default webcam, or a path to a video file
   width: 640
   height: 480
   fps: 30

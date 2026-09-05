@@ -57,7 +57,7 @@ _FRAME_FIELDS = [
     "nod_active", "nod_recent_count", "head_turned", "gaze_h", "gaze_v",
     "gaze_off", "gaze_off_ratio", "phone_conf", "phone_sustained",
     "hands_detected", "hands_on_wheel", "hands_off",
-    "state", "drowsy_score", "distract_score",
+    "state", "drowsy_score", "distract_score", "cnn_drowsy_prob",
 ]
 
 
